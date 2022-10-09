@@ -1,10 +1,10 @@
 import re
 from enum import Enum
-
+from config import connect
 
 
 class Consulta():
-    def __init__(self,select = "",descricao = "", comando = ""):
+    def __init__(self, select="", descricao="", comando=""):
         self.select = select
         self.descricao = descricao
         self.comando = comando
@@ -28,13 +28,11 @@ class Menu(Enum):
     OP15 = Consulta()
 
     @classmethod
-    def get_opcao(cls,num):
+    def get_opcao(cls, num):
         return cls[f"OP{num}"]
 
 
-
-#descreve as consultas uma a uma.
-
+# descreve as consultas uma a uma.
 
 Menu.OP1.value.select = "SELECT IdLoja, IdCarro, AnoFab, ValorDiaria, TipoCombustivel, Placa, Opcionais"
 Menu.OP1.value.descricao = "Carros disponíveis por loja e categoria"
@@ -159,30 +157,38 @@ Menu.OP15.value.comando = f'''SELECT IdCarro, PLACA, NomeCat,ValorDiaria
 '''
 
 
-
 def formatar_consulta(opcao, *args):
-    #Itera sobre os valores a serem utilizados nas consultas, que estão no formato variavel = valor, separando os dois itens da string
+    # Itera sobre os valores a serem utilizados nas consultas, que estão no formato variavel = valor, separando os dois itens da string
     for item in args:
         if("=" in item):
-            item = item.replace(" ","")
+            item = item.replace(" ", "")
             item_tupla = item.split("=")
 
-            if(len(item_tupla) == 2): #proteção caso o parametro recebido seja a = b = c por engano
-                variavel,valor = item_tupla
+            if(len(item_tupla) == 2):  # proteção caso o parametro recebido seja a = b = c por engano
+                variavel, valor = item_tupla
                 print(f"{variavel=},{valor=}")
+
 
 def listar_consultas():
     print("Menu de consultas\n")
     for item in Menu:
         print(f"{item.name}. {item.value.descricao}")
 
-    opcao = int(input("Escolha a consulta que deseja realizar\n"))
-    print(f"\n{opcao=}")
-    print(f"{Menu.get_opcao(opcao).value.select} \n\nDentre os valores acima, especifique os que deseja restringir")
 
 def main():
     formatar_consulta(7, "abc=xyz", "a=5", "kj = ast")
+    conexao = connect()  # conecta com o banco
     listar_consultas()
+
+    opcao = int(input("Escolha a consulta que deseja realizar\n"))
+    print(f"\n{opcao=}")
+    print(f"{Menu.get_opcao(opcao).value.select} \n\nDentre os valores acima, especifique os que deseja restringir")
+    conexao.execute(Menu.get_opcao(opcao).value.comando)  # realiza a query
+    for row in conexao.fetchall():  # imprime todas as linhas retornadas
+        print(row)
+
+    conexao.close()
+
 
 if __name__ == "__main__":
     main()
